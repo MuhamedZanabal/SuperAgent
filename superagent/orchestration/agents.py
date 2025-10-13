@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
 from superagent.agents.advanced_planner import UnifiedAdvancedPlanner
-from superagent.agents.executor import TaskExecutor
+from superagent.agents.executor import Executor  # Fixed import from TaskExecutor to Executor
 from superagent.core.logger import get_logger
 from superagent.memory.manager import MemoryManager
 from superagent.monitoring.metrics import MetricsCollector
@@ -99,7 +99,7 @@ class ExecutorAgent(BaseAgent):
         self,
         agent_id: str,
         event_bus: EventBus,
-        executor: TaskExecutor,
+        executor: Executor,  # Fixed type from TaskExecutor to Executor
     ):
         super().__init__(agent_id, event_bus)
         self.executor = executor

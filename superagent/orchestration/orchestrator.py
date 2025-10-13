@@ -7,8 +7,8 @@ from typing import Dict, List, Optional
 from uuid import uuid4
 
 from superagent.agents.advanced_planner import UnifiedAdvancedPlanner
-from superagent.agents.executor import TaskExecutor
-from superagent.core.config import Settings
+from superagent.agents.executor import Executor  # Fixed import from TaskExecutor to Executor
+from superagent.core.config import SuperAgentConfig  # Fixed import from Settings to SuperAgentConfig
 from superagent.core.logger import get_logger
 from superagent.llm.provider import UnifiedLLMProvider
 from superagent.memory.manager import MemoryManager
@@ -39,13 +39,13 @@ class Orchestrator:
 
     def __init__(
         self,
-        settings: Settings,
+        config: SuperAgentConfig,  # Fixed parameter type from settings to config
         llm_provider: UnifiedLLMProvider,
         tool_registry: ToolRegistry,
         memory_manager: MemoryManager,
         metrics_collector: MetricsCollector,
     ):
-        self.settings = settings
+        self.config = config  # Renamed from settings to config
         self.llm_provider = llm_provider
         self.tool_registry = tool_registry
         self.memory_manager = memory_manager
@@ -75,9 +75,9 @@ class Orchestrator:
         )
 
         # Executor agent
-        executor = TaskExecutor(
+        executor = Executor(  # Fixed class name from TaskExecutor to Executor
             tool_registry=self.tool_registry,
-            max_parallel=self.settings.max_parallel_tasks,
+            llm_provider=self.llm_provider,
         )
         self.agents["executor"] = ExecutorAgent(
             agent_id="executor_001",

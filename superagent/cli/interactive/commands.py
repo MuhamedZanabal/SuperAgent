@@ -267,19 +267,38 @@ class CommandRegistry:
             if not args:
                 return "Usage: /exec <task description>"
             
-            from superagent.orchestration.orchestrator import RuntimeOrchestrator
+            from superagent.orchestration.orchestrator import Orchestrator
+            from superagent.core.runtime import get_runtime
             
-            orchestrator = RuntimeOrchestrator()
+            # Get runtime components
+            runtime = get_runtime()
+            if not runtime.is_initialized():
+                await runtime.initialize()
+            
+            # Create orchestrator
+            orchestrator = Orchestrator(
+                config=runtime.config,
+                llm_provider=runtime.llm_provider,
+                tool_registry=runtime.tool_registry,
+                memory_manager=runtime.memory_manager,
+                metrics_collector=runtime.metrics_collector,
+            )
+            
             await orchestrator.start()
             
-            result = await orchestrator.execute_goal(args)
+            result = await orchestrator.execute_goal(
+                goal=args,
+                session_id=ctx.shell.session_id,
+                conversation_history=[msg.model_dump() for msg in ctx.messages],
+            )
             
             await orchestrator.stop()
             
-            if result.success:
-                return f"✓ Task completed successfully\n\nResult: {result.output}"
+            if result.get("status") == "completed":
+                return f"✓ Task completed successfully\n\nResult: {result.get('data', {})}"
             else:
-                return f"✗ Task failed: {result.error}"
+                error = result.get("error", "Unknown error")
+                return f"✗ Task failed: {error}"
         
         self.register("exec", cmd_exec, "Execute a task autonomously", ["execute", "run"])
         
