@@ -1,0 +1,17 @@
+{
+  "name": "example-plugin",
+  "version": "1.0.0",
+  "description": "Example plugin demonstrating the plugin system",
+  "author": "SuperAgent Team",
+  "entry_point": "main.py",
+  "dependencies": [],
+  "permissions": {
+    "file_read": true,
+    "file_write": false,
+    "network": false,
+    "execute": false,
+    "environment": false
+  },
+  "tags": ["example", "demo"],
+  "min_superagent_version": "0.1.0"
+}
