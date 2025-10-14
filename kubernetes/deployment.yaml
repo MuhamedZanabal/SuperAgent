@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: superagent
+  labels:
+    app: superagent
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: superagent
+  template:
+    metadata:
+      labels:
+        app: superagent
+    spec:
+      containers:
+      - name: superagent
+        image: superagent:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: SUPERAGENT_DATA_DIR
+          value: /data
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: superagent-secrets
+              key: openai-api-key
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: superagent-secrets
+              key: anthropic-api-key
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: plugins
+          mountPath: /app/plugins
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import superagent; print('healthy')"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import superagent; print('ready')"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: superagent-data
+      - name: plugins
+        configMap:
+          name: superagent-plugins
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: superagent
+spec:
+  selector:
+    app: superagent
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: superagent-data
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi

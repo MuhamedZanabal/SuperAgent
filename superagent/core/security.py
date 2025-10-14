@@ -167,11 +167,22 @@ class SecurityManager:
             return self._encryption_key
         
         if password:
+            # Load or generate salt from secure storage
+            salt_file = self.config.data_dir / ".salt"
+            if salt_file.exists():
+                salt = salt_file.read_bytes()
+            else:
+                salt = os.urandom(16)
+                salt_file.parent.mkdir(parents=True, exist_ok=True)
+                salt_file.write_bytes(salt)
+                # Secure the salt file
+                os.chmod(salt_file, 0o600)
+            
             # Derive key from password
             kdf = PBKDF2(
                 algorithm=hashes.SHA256(),
                 length=32,
-                salt=b"superagent_salt",  # In production, use random salt
+                salt=salt,
                 iterations=100000,
             )
             key = kdf.derive(password.encode())

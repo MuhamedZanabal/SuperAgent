@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  superagent:
+    build: .
+    image: superagent:latest
+    container_name: superagent
+    environment:
+      - SUPERAGENT_DATA_DIR=/data
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - ./data:/data
+      - ./plugins:/app/plugins
+    stdin_open: true
+    tty: true
+    networks:
+      - superagent-network
+  
+  redis:
+    image: redis:7-alpine
+    container_name: superagent-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - superagent-network
+  
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: superagent-chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+    networks:
+      - superagent-network
+
+volumes:
+  redis-data:
+  chroma-data:
+
+networks:
+  superagent-network:
+    driver: bridge

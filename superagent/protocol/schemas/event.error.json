@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ErrorEvent",
+  "type": "object",
+  "required": ["event", "ts", "session_id", "request_id", "error_type", "error_message"],
+  "properties": {
+    "event": {
+      "type": "string",
+      "enum": ["error.user", "error.system", "error.tool"]
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "correlation_id": {
+      "type": ["string", "null"]
+    },
+    "error_type": {
+      "type": "string"
+    },
+    "error_message": {
+      "type": "string"
+    },
+    "error_details": {
+      "type": ["object", "null"]
+    },
+    "recoverable": {
+      "type": "boolean"
+    }
+  }
+}

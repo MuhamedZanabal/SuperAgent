@@ -4,9 +4,8 @@ File operation tools.
 
 from typing import List
 from pathlib import Path
-
+from superagent.core.security import SecurityManager, Permission
 from superagent.tools.base import BaseTool, ToolParameter, ToolParameterType, ToolResult
-from superagent.core.security import SecurityManager
 from superagent.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -43,13 +42,7 @@ class ReadFileTool(BaseTool):
         try:
             file_path = Path(path)
             
-            # Security check
-            if not self.security_manager.is_path_allowed(file_path):
-                return ToolResult(
-                    success=False,
-                    output=None,
-                    error=f"Access denied: {path}",
-                )
+            self.security_manager.validate_file_access(file_path, Permission.READ)
             
             # Read file
             content = file_path.read_text()
@@ -105,13 +98,7 @@ class WriteFileTool(BaseTool):
         try:
             file_path = Path(path)
             
-            # Security check
-            if not self.security_manager.is_path_allowed(file_path, write=True):
-                return ToolResult(
-                    success=False,
-                    output=None,
-                    error=f"Write access denied: {path}",
-                )
+            self.security_manager.validate_file_access(file_path, Permission.WRITE)
             
             # Create parent directories
             file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -171,13 +158,7 @@ class ListFilesTool(BaseTool):
         try:
             dir_path = Path(path)
             
-            # Security check
-            if not self.security_manager.is_path_allowed(dir_path):
-                return ToolResult(
-                    success=False,
-                    output=None,
-                    error=f"Access denied: {path}",
-                )
+            self.security_manager.validate_file_access(dir_path, Permission.READ)
             
             # List files
             files = [str(f.relative_to(dir_path)) for f in dir_path.glob(pattern)]

@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PlanEvent",
+  "type": "object",
+  "required": ["event", "ts", "session_id", "request_id"],
+  "properties": {
+    "event": {
+      "type": "string",
+      "enum": ["plan.created", "plan.step_started", "plan.step_finished"]
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "correlation_id": {
+      "type": ["string", "null"]
+    },
+    "steps": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "step_index": {
+      "type": ["integer", "null"]
+    },
+    "step_name": {
+      "type": ["string", "null"]
+    },
+    "intent": {
+      "type": ["string", "null"]
+    },
+    "confidence": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "result": {
+      "type": ["object", "null"]
+    }
+  }
+}
