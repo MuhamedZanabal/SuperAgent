@@ -1,9 +1,9 @@
 [project]
 name = "superagent"
-version = "0.1.0"
-description = "Production-ready CLI-based AI automation platform"
+version = "2.0.0"
+description = "Production-ready CLI-based AI automation platform with GeminiCLI/Codex-grade UX"
 authors = [{name = "SuperAgent Team"}]
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "typer>=0.12.0",
     "rich>=13.7.0",
@@ -24,6 +24,11 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "pyyaml>=6.0.1",
     "httpx>=0.27.0",
+    "prompt-toolkit>=3.0.43",
+    "opentelemetry-api>=1.22.0",
+    "opentelemetry-sdk>=1.22.0",
+    "opentelemetry-exporter-otlp>=1.22.0",
+    "reportlab>=4.0.0",
 ]
 
 [project.optional-dependencies]
@@ -38,6 +43,7 @@ dev = [
 
 [project.scripts]
 superagent = "superagent.cli.app:cli_main"
+sa = "superagent.cli.app:cli_main"
 
 [build-system]
 requires = ["setuptools>=68.0"]
@@ -45,14 +51,14 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 100
-target-version = ['py312']
+target-version = ['py310']
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py310"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_configs = true

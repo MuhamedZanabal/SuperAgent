@@ -5,6 +5,7 @@ Main CLI application entry point.
 import typer
 from typing import Optional
 from pathlib import Path
+import asyncio
 
 from superagent.core.config import get_config, set_config, SuperAgentConfig
 from superagent.core.logger import get_logger
@@ -26,8 +27,9 @@ app = typer.Typer(
 )
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context,
     config_file: Optional[Path] = typer.Option(
         None,
         "--config",
@@ -53,7 +55,30 @@ def main(
     Configure providers, run agents, and orchestrate AI workflows.
     """
     try:
-        # Load configuration
+        config_path = config_file or Path.home() / ".superagent" / "config.yaml"
+        
+        # If no subcommand and no config exists, run wizard
+        if ctx.invoked_subcommand is None:
+            if not config_path.exists():
+                console.print("[yellow]No configuration found. Running setup wizard...[/yellow]\n")
+                from superagent.cli.wizard import run_wizard
+                config = asyncio.run(run_wizard())
+                set_config(config)
+            else:
+                # Load existing config
+                config = SuperAgentConfig.from_yaml(config_path)
+                set_config(config)
+            
+            # Launch interactive shell
+            from superagent.cli.interactive.enhanced_shell import EnhancedShell
+            from superagent.core.runtime import SuperAgentRuntime
+            
+            runtime = SuperAgentRuntime(config)
+            shell = EnhancedShell(runtime)
+            asyncio.run(shell.run())
+            return
+        
+        # Load configuration for subcommands
         if config_file and config_file.exists():
             config = SuperAgentConfig.from_yaml(config_file)
             set_config(config)
@@ -90,24 +115,61 @@ def init(
         help="Output path for configuration file",
     ),
 ):
-    """Initialize SuperAgent configuration."""
+    """Initialize SuperAgent configuration with wizard."""
+    from superagent.cli.wizard import run_wizard
+    
     try:
-        config = get_config()
+        config = asyncio.run(run_wizard())
         
-        # Ensure directory exists
-        output.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Save configuration
-        config.to_yaml(output)
-        
-        console.print(f"[green]✓[/green] Configuration initialized at: {output}")
+        console.print(f"\n[green]✓[/green] Configuration initialized at: {output}")
         console.print("\n[yellow]Next steps:[/yellow]")
-        console.print("1. Edit the configuration file to add your API keys")
-        console.print("2. Run [cyan]superagent providers[/cyan] to check provider status")
-        console.print("3. Start chatting with [cyan]superagent chat[/cyan]")
+        console.print("1. Run [cyan]superagent[/cyan] to start the interactive shell")
+        console.print("2. Or use [cyan]superagent chat[/cyan] for quick conversations")
+        console.print("3. Check [cyan]superagent --help[/cyan] for all commands")
         
     except Exception as e:
         print_error(f"Initialization failed: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def interactive():
+    """Launch interactive shell (GeminiCLI-style experience)."""
+    try:
+        config_path = Path.home() / ".superagent" / "config.yaml"
+        
+        if not config_path.exists():
+            console.print("[yellow]No configuration found. Running setup wizard...[/yellow]\n")
+            from superagent.cli.wizard import run_wizard
+            config = asyncio.run(run_wizard())
+        else:
+            config = SuperAgentConfig.from_yaml(config_path)
+        
+        set_config(config)
+        
+        from superagent.cli.interactive.enhanced_shell import EnhancedShell
+        from superagent.core.runtime import SuperAgentRuntime
+        
+        runtime = SuperAgentRuntime(config)
+        shell = EnhancedShell(runtime)
+        asyncio.run(shell.run())
+        
+    except Exception as e:
+        print_error(f"Interactive shell error: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def wizard():
+    """Run configuration wizard to set up or reconfigure SuperAgent."""
+    from superagent.cli.wizard import run_wizard
+    
+    try:
+        config = asyncio.run(run_wizard())
+        console.print("\n[green]✓ Configuration complete![/green]")
+        console.print("Run [cyan]superagent[/cyan] to start using SuperAgent")
+    except Exception as e:
+        print_error(f"Wizard failed: {e}")
         raise typer.Exit(1)
 
 
